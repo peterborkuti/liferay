@@ -24,7 +24,7 @@ public class GroupidCleaner extends SimpleAction {
 		super();
 	}
 
-	private void cleanChunk(
+	protected int cleanChunk(
 		int start, int end, int count, String methodGetEntries,
 		String classModel, String methodDeleteEntry, String classLocalSUFQDN,
 		Class service, boolean dontDelete)
@@ -33,8 +33,8 @@ public class GroupidCleaner extends SimpleAction {
 		_log.debug("cleanChunk: from " + start + " to " + end + ", count: " + count);
 
 		List entries = null;
-		long deletedCount = 0;
-		long failedCount = 0;
+		int deletedCount = 0;
+		int failedCount = 0;
 
 		try {
 			_log.debug("invoking " + methodGetEntries + " on " +
@@ -46,7 +46,7 @@ public class GroupidCleaner extends SimpleAction {
 		catch (Exception e) {
 			_log.debug("Could not find entries.");
 			e.printStackTrace();
-			return;
+			return deletedCount;
 		}
 
 		_log.debug("Count of selected items: " + entries.size());
@@ -102,6 +102,8 @@ public class GroupidCleaner extends SimpleAction {
 		_log.debug("Number of failed deletion of entries:" + failedCount);
 		_log.debug("");
 
+		return deletedCount;
+
 	}
 
 	private void doDelete(
@@ -154,11 +156,16 @@ public class GroupidCleaner extends SimpleAction {
 		int j = 1;
 		for (int i = 0; i < count; i += chunkCount) {
 			_log.debug(className + " chunk:" + j);
-			cleanChunk(
-				i, i + chunkCount, count, methodGetEntries, classModel,
-				methodDeleteEntry, classLocalSUFQDN, service, dontDelete);
-			j++;
 
+			int deleted = cleanChunk(
+				i, i + chunkCount, count, methodGetEntries, classModel,
+					methodDeleteEntry, classLocalSUFQDN, service, dontDelete);
+
+			count -= deleted;
+
+			i -= deleted;
+
+			j++;
 		}
 
 		return;
