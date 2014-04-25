@@ -9,12 +9,16 @@
 #erface-4-6130, wcm-core-5-6130, web-content-7-6130
 #
 # Author: Péter Borkuti, 2014.03.12
-# Version 1.0
+# Version 1.1
 #
+# history
+# 1.0 -> 1.1 
+#    There are such an LPEs: LPE-11301=LPE-11450+LPE-11451
+#    It must be transfomed to:  LPE-11301,LPE-11450,LPE-11451
 #
 echo > tmp.txt
 for i in *.zip; do
 	echo $i
 	unzip -p "$i" fixpack_documentation.xml|grep fixed-issues|sed -e 's@</*fixed-issues>@@g'|tr -d '\t' >> tmp.txt
 done
-grep -v '^ *$' tmp.txt|tr ',' '\n' |sort|uniq| tr '\n' ',' |sed -e 's/,$//'> LPE.txt
+grep -v '^ *$' tmp.txt|tr ',' '\n' |sort|uniq| tr '\n' ',' |sed -e 's/,$//'| tr '=+' ',,' > LPE.txt
