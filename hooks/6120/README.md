@@ -22,9 +22,9 @@ from your app-server's lib directory, because the SDK uses an old servlet-api.ja
 
 ## test after the hook
 
-!(doc\test-after-hook.jpg)
+!(doc/test-after-hook.jpg)
 
 ## test before the hook
 
-!(doc\test-before-hook.jpg)
+!(doc/test-before-hook.jpg)
 
