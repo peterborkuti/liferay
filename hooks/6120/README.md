@@ -17,6 +17,9 @@ HttpOnly in addCookie method:
 
 For detailed source, see the HttpOnlyCookieFilter.java file in docroot\WEB-INF\src.
 
+If you want to compile this, you should change the servlet-api.jar in the SDK's lib directory to the one
+from your app-server's lib directory, because the SDK uses an old servlet-api.jar.
+
 ## test after the hook
 
 !(doc\test-after-hook.jpg)
