@@ -15,6 +15,7 @@ import javax.servlet.http.Cookie;
 public class HttpOnlyCookieFilter implements Filter {
 
 	private boolean setHttpOnlyFlag = false;
+	private boolean setSecureFlag = false;
 
 	private class ResponseWrapper extends HttpServletResponseWrapper {
 
@@ -27,6 +28,7 @@ public class HttpOnlyCookieFilter implements Filter {
 		public void addCookie(Cookie cookie) {
 
 			cookie.setHttpOnly(setHttpOnlyFlag);
+			cookie.setSecure(setSecureFlag);
 			super.addCookie(cookie);
 
 		}
@@ -49,6 +51,10 @@ public class HttpOnlyCookieFilter implements Filter {
 	public void init(FilterConfig filterConfig) {
 		if ("true".equals(filterConfig.getInitParameter("httponly"))) {
 			setHttpOnlyFlag = true;
+		}
+
+		if ("true".equals(filterConfig.getInitParameter("secure"))) {
+			setSecureFlag = true;
 		}
 	}
 }
