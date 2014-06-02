@@ -1,0 +1,210 @@
+= DRAFT! - Approaching JavaScript and CSS Issues =
+
+== Description ==
+
+This article describes the goal of JavaScript and CSS in Liferay Portal, shows the importan layers and guides an engineer how to start solving a javascript issue.
+
+== Goal of css and javascript ==
+
+=== CSS (*C*ascading *S*tyle *S*heets) ===
+* defines how to display HTML elements
+* can mark elements in HTML in order to deal with them with JavaScript
+* can sign elements in HTML to let JavaScript knows about the element "state"
+http://www.w3schools.com/css/
+https://developer.mozilla.org/en-US/docs/Web/Guide/CSS
+
+
+=== JavaScript ===
+* programming language based on EcmaScript
+* embedded in browsers so it runs on client-side
+* can interact with user
+* can interact with the server asynchronously
+* can control the browser
+* modify web pages (content, cssHTML elements and CSS)
+http://www.w3schools.com/js/
+https://developer.mozilla.org/en/docs/Web/JavaScript
+
+== How it works ==
+
+Browsers build a model in memory about the displayed document, which called *DOM* (*D*ocument *O*bject *M*odel). Programmers can modify this DOM with JavaScript via a 
+a *standardized API*. The name of the standard is *EcmaScript* and JavaScript is one of its dialect. JavaScript programs stored as text files and spreaded as *source code*.
+Browsers have *JavaScript engines* which implements the standard and interpret/compile JavaScript *source code*.
+http://www.ecmascript.org/
+http://en.wikipedia.org/wiki/List_of_ECMAScript_engines
+
+== Frameworks ==
+In old days (before EcmaScript standardization) browsers wanted to attract users with new JavaScript features, which caused big incompatibility. When the first EcmaScript
+standards came out, it was hard-to read, so JavaScript engine makers interprets differently and/or interprets just a subset of it and provided additional features, which
+also caused incompatibility. Moreover, the API of DOM is a hardly understandable, far from easy-to-use creature, so programming in JavaScript was not a big fun.
+
+JavaScript frameworks emerged to hide incompatibility among browsers and to offer an easy-to-use interface to DOM.
+
+After some years the incompatibility between modern browsers nearly disappeared (but unfortunately people use old browsers also), 
+so frameworks started to offer new spectacular features, new GUI elements, etc.
+
+http://en.wikipedia.org/wiki/History_of_the_web_browser
+http://en.wikipedia.org/wiki/Browser_wars
+
+== Layers in Liferay Portal ==
+
+* portlet
+* portal
+* AlloyUI
+* YUI
+* third-party
+
+=== Where you can find js/css files 
+==== portlet ====
+* js and css directories of portlet
+* jsp/jspf files of portlet
+
+==== portal ====
+* html/js/liferay, html/css
+* vm, ftl, jsp, jspf files
+* taglib files
+
+=== AlloyUI ===
+* html/js/aui/aui-*
+
+=== YUI ===
+* html/js/aui
+
+=== third party ===
+* html/js/editor
+* html/js/misc
+
+== Setup ==
+
+=== minifying ===
+
+As I mention earlier, JavaScript delivered in source code as normal text file. It is very verbose (think of long variable names, whitespaces), so wastes bandwidth.
+Programmers try to push down the size of delivered files. In order to this minifier tools were created. A minifed JavaScript file is a normal text file, but every unnecessary
+character is eliminated from it. For example, white spaces, new lines. Variable names substituded only one/two character length, etc.
+
+While it is good on production, it nearly prevents debugging. So JavaScript files stored on disk in more format. One is normal (as the programmer typed in, readable, easy-to use debugging)
+and one in minified version. We also use a "debugging" version of files. (It is usually the same as the normal js file, so I am not sure, why we use it, probably it is a convention, YUI uses this)
+Check the html/js/aui directories and you can see every js files in three version, the file names ended with "-debug" and "-min".
+
+TASK: check if there is a different -debug file than its normal match
+
+Liferay Portal has a built-in minifier filter which can minify files on-the-fly.
+
+When debugging, use the minifier switched off in portal-ext.properties:
+
+{{{
+minifier.enabled=false
+}}}
+
+=== barebone.jsp and everything.jsp ===
+
+JavaScript files usually small and there are many of them. When a browser wants to download all of them, every single file needs a new http connection. This is slow and 
+uses unnecessary server resources, so concatenate every JavaScript file into one is good idea and a common practice.
+Unfortunately it has one big drawback. When a page uses only some of the javascript files but we concatenate all js files into one, unnecessary js files will travel through the net.
+
+Liferay has a clever feature for this, barebone.jsp and everything.jsp.
+There are two lists of JavaScript files in portal.properties which are concatenated into one:
+{{{
+    javascript.bundle.ids=\
+        javascript.barebone.files,\
+        javascript.everything.files
+}}}
+javascript.barebone.files and javascript.everything.files.
+
+When debugging, it must be switched off :
+
+{{{
+javascript.fast.load=false
+}}}
+
+For css use the
+{{{
+theme.css.fast.load=false
+theme.images.fast.load=false
+}}}
+
+For more info see the portal.properties file.
+
+=== Tip - minified CKEditor ===
+
+CKEditor JavaScritp files are minified and hardly can be unminified.
+Here are two tips, which would not work for me:
+
+----From Iliyan-------------
+Download/clone CKEditor from our GitHub repository and open "dev/builder/build.sh”
+
+Scroll to bottom, there is a line, something like:
+java -jar ckbuilder/$CKBUILDER_VERSION/ckbuilder.jar …..
+
+Replace it with:
+java -jar ckbuilder/$CKBUILDER_VERSION/ckbuilder.jar --build --leave-css-unminified --leave-js-unminified ../../ release --version="4.1.1 DEV" --build-config build-config.js --overwrite "$@“
+
+Note these two options:
+“--leave-css-unminified” and "--leave-js-unminified"
+
+and then run build.sh and deploy the result to Portal.
+
+Hope that helps.
+
+Iliyan
+-----From Giros--------------
+
+The ckeditor documentation advises to use ckeditor_source.js instead of ckeditor.js if we want to debug an unminified version,
+but when I tried that I got console errors and the editor was not rendered at all.
+(And on trunk, ckeditor_source.js doesn't even exist.) So I assumed this is not the way we do this.
+-----------------------------
+
+At the end I used the pretty-format feature of the browser (Chrome and IE can show minified js files or you can use any of the on-line JavaScript beautifiers).
+
+
+== Tools ==
+
+When debugging JavaScript, our browser is the most important tool. I used Firebug for FireFox, Chrome Develeoper Tools and IE developer tools. Now I mainly use Chrome Developer Tools
+when an issue is not browser dependent and IE Developer Tools for IE issues.
+
+https://developer.chrome.com/devtools/docs/javascript-debugging
+
+
+=== Tip ===
+IE has a fantastic feature, the "Document mode". (F12 than CTRL-8) IE can be set to behave like older versions of IE and programmers at Microsoft done their work very well. It is not 100%, but if it
+works, it can spare hours for you.
+
+TODO: a video about developer mode showing that javascript engine works differently (new Date("2014-02-05");)
+
+=== Tip ===
+Installed different versions from browsers is a challenging task. Fortunately others did this job, see the Utilu collection of browsers.
+I advise you to create a Windows Virtual Machine and install the utili collections.
+http://utilu.com/
+
+It contains IE only upto IE8 so you will need a separate IE9, if you need it.
+
+== How to put breakpoints ==
+
+If you know the Source in Liferay, you can put "debug;" command into the JavaScript source, and Chrome will happy to stop on that.
+If you know the Source in Browser, you can place breakpoint with developer tools.
+
+You can also use console.log("message"), but beware, IE can use console.log() only when the console is open!
+You can also use alert() if it fits to your needs.
+
+== How to find the JavaScript file ==
+
+If it is a standalone JavaScript file, you can find it easily:
+* aui files are in html\js\aui directory
+* portlet's js files are in the portlet's js directory
+
+TODO: picture of standalone files in chrome developer tools
+
+If it is not a standalone js file, probably it is part of the portlet's jsp files.
+Try to find some text in the browser's javascript source view which can identify the jsp file. For example, when I debugged the Search portlet, I found a 'REGEX_DATE' string.
+So I find this text in contents of the portlet's jps files, and it was in only one place, in modified.jsp.
+
+If you are not so lucky than I was, try to find the string literal in all of the portal's file. I usually this file nam pattern with Eclipse:
+*.f*, *.java, *.js*, *.v*
+
+The *.f* is for ftl files, *.js* is all for jsp, jspf and JavaScripts and *.v* is for velocity macros.
+
+TODO: picture of not-standalone file in chrome developer tools
+
+== Writer ==
+
+Péter Borkuti
+
