@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.BaseModel;
+import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 
 public class GroupidCleaner extends SimpleAction {
@@ -72,8 +73,24 @@ public class GroupidCleaner extends SimpleAction {
 
 			if (groupId > 0) {
 				try {
-					if (GroupLocalServiceUtil.fetchGroup(groupId) == null) {
+					Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+					boolean foundMissingParentGroup = true;
+
+					if (group != null) {
+						try {
+							// It will throw NoSuchGroupExcepion if there is a non-existent parent
+							GroupLocalServiceUtil.getParentGroups(groupId);
+							foundMissingParentGroup = false;
+						}
+						catch (Exception e) {
+							_log.debug("Non existing parent of " + groupId);
+						}
+					}
+					else {
 						_log.debug("Missing group id:" + groupId);
+					}
+
+					if (group == null || foundMissingParentGroup) {
 						if (!dontDelete) {
 							try {
 								java.lang.reflect.Method method =
